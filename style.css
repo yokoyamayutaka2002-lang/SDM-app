@@ -1,165 +1,85 @@
-/* =========================
-   全体設定
-========================= */
-
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-               "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
-  background: radial-gradient(ellipse at top, #0f172a, #020617);
-  color: #e5e7eb;
+  font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  background: #0b132b;
+  color: #fff;
 }
 
-h1, h2, h3 {
-  margin: 0;
-  font-weight: 600;
+#app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 80px;
 }
 
-.hidden {
-  display: none;
+.slide-image {
+  width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 24px;
+  background: #fff;
+  border-radius: 12px;
 }
 
-/* =========================
-   メインカード
-========================= */
-
-.card {
-  max-width: 900px;
-  margin: 32px auto;
-  padding: 24px 28px;
-  background: rgba(15, 23, 42, 0.9);
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+.summary {
+  background: #111c44;
+  border-radius: 12px;
+  padding: 20px;
 }
 
-/* =========================
-   ヘッダー部分
-========================= */
+.summary h3 {
+  margin-top: 0;
+  border-left: 4px solid #4ea8ff;
+  padding-left: 8px;
+}
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.summary-item {
+  background: #0b132b;
+  border-radius: 8px;
+  padding: 12px;
   margin-bottom: 12px;
 }
 
-.part-label {
-  font-size: 0.85rem;
-  color: #93c5fd;
-  background: rgba(59, 130, 246, 0.15);
-  padding: 4px 10px;
-  border-radius: 999px;
+.summary-text {
+  margin: 0 0 8px;
 }
 
-.progress {
-  font-size: 0.85rem;
-  color: #9ca3af;
-}
-
-.title {
-  margin: 12px 0 16px;
-  font-size: 1.4rem;
-  line-height: 1.4;
-}
-
-/* =========================
-   スライド画像（重要）
-========================= */
-
-.slide-img {
-  max-width: 100%;
-  max-height: 80vh;   /* 画面からはみ出さない */
-  width: auto;
-  height: auto;
-  display: block;
-  margin: 0 auto 16px;
-  border-radius: 12px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
-}
-
-/* =========================
-   理解度チェック
-========================= */
-
-.question {
-  margin-top: 8px;
-  font-size: 1rem;
-  color: #e5e7eb;
-}
-
-.answers {
-  display: flex;
-  gap: 12px;
-  margin: 14px 0;
-  flex-wrap: wrap;
-}
-
-.answer-btn {
-  padding: 8px 16px;
-  border-radius: 999px;
-  border: 1px solid #334155;
-  background: rgba(2, 6, 23, 0.8);
-  color: #e5e7eb;
+.choices label {
+  margin-right: 12px;
   cursor: pointer;
-  transition: all 0.15s ease;
 }
 
-.answer-btn:hover {
-  background: rgba(59, 130, 246, 0.25);
-  border-color: #60a5fa;
+.question-box {
+  display: none;
+  width: 100%;
+  margin-top: 8px;
+  min-height: 60px;
 }
-
-/* =========================
-   ナビゲーション
-========================= */
 
 .nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #0b132b;
   display: flex;
   justify-content: space-between;
-  margin-top: 20px;
+  padding: 12px 24px;
 }
 
-.nav button {
-  padding: 8px 18px;
+button {
+  padding: 10px 18px;
+  font-size: 16px;
   border-radius: 999px;
   border: none;
   cursor: pointer;
-  font-size: 0.9rem;
-}
-
-#prevBtn {
-  background: #020617;
-  color: #cbd5f5;
-  border: 1px solid #334155;
 }
 
 #nextBtn {
-  background: #3b82f6;
-  color: #ffffff;
+  background: #4ea8ff;
+  color: #000;
 }
 
-#prevBtn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* =========================
-   まとめ画面
-========================= */
-
-#summary {
-  max-width: 900px;
-  margin: 32px auto;
-  padding: 24px 28px;
-  background: rgba(15, 23, 42, 0.9);
-  border-radius: 16px;
-}
-
-#summary h2 {
-  margin-bottom: 12px;
-}
-
-#askList li {
-  margin: 6px 0;
-  line-height: 1.5;
+#backBtn {
+  background: #fff;
 }

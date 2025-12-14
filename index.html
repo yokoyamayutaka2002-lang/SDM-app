@@ -1,72 +1,19 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>重症喘息 ディシジョンエイド（MVP）</title>
+  <meta charset="UTF-8" />
+  <title>重症喘息 ディシジョンエイド</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="wrap">
-    <h1>重症喘息 ディシジョンエイド（MVP）</h1>
-    <p class="sub">
-      パート1〜4（理解→課題→選択肢→生物学的製剤）＋理解度チェック。
-    </p>
-  </header>
 
-  <main class="wrap">
-    <section class="card">
-      <div class="meta">
-        <span id="partLabel" class="pill"></span>
-        <span id="progress" class="muted"></span>
-      </div>
+  <main id="app">
+    <div id="slide-container"></div>
 
-      <h2 id="title"></h2>
-      <div id="content" class="content"></div>
-
-      <hr class="sep" />
-
-      <div class="quiz">
-        <p class="q" id="question"></p>
-        <div class="btnRow">
-          <button class="btn" data-answer="yes">はい</button>
-          <button class="btn" data-answer="no">いいえ</button>
-          <button class="btn" data-answer="unsure">迷う</button>
-        </div>
-        <p class="hint muted">※「迷う」「いいえ」は、あとで医師に聞きたい項目として自動で記録されます。</p>
-      </div>
-
-      <div class="nav">
-        <button id="prevBtn" class="btn ghost">戻る</button>
-        <button id="nextBtn" class="btn primary">次へ</button>
-      </div>
-    </section>
-
-    <section id="summary" class="card hidden">
-      <h2>まとめ（診察で医師に確認したいこと）</h2>
-      <p class="muted">あなたの回答から自動生成しています。</p>
-
-      <h3>「迷う／いいえ」が付いた項目</h3>
-      <ul id="askList"></ul>
-
-      <h3>自由記述（医師に聞きたいこと）</h3>
-      <textarea id="freeText" rows="6" placeholder="例）ステロイドを時々飲むのはどの程度リスク？ / 注射の副作用が不安 / 費用が心配 など"></textarea>
-
-      <div class="nav">
-        <button id="backToSlidesBtn" class="btn ghost">スライドに戻る</button>
-        <button id="saveBtn" class="btn primary">結果を保存</button>
-      </div>
-
-      <details class="mt">
-        <summary>JSON（コピー用）</summary>
-        <pre id="jsonOut" class="pre"></pre>
-        <button id="copyBtn" class="btn">JSONをコピー</button>
-      </details>
-    </section>
-
-    <footer class="wrap footer muted">
-      <p>※このMVPは静的サイト（HTML/JS）で動作します。サーバー不要。</p>
-    </footer>
+    <div class="nav">
+      <button id="backBtn">戻る</button>
+      <button id="nextBtn">次へ</button>
+    </div>
   </main>
 
   <script src="script.js"></script>
