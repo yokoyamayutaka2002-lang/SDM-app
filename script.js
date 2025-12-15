@@ -175,6 +175,12 @@ const slides = [
 ];
 
 /***********************
+ * ユーティリティ
+ ***********************/
+const circledNumbers = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭"];
+const slideNo = (idx) => circledNumbers[idx] || "";
+
+/***********************
  * 状態管理
  ***********************/
 let page = 0;
@@ -190,16 +196,9 @@ const nextBtn = document.getElementById("nextBtn");
 const backBtn = document.getElementById("backBtn");
 
 /***********************
- * スクロール
- ***********************/
-function scrollTop() {
-  container.scrollIntoView({ block: "start" });
-}
-
-/***********************
  * 保存（normal）
  ***********************/
-function saveNormal(slide) {
+function saveNormal(slide, idx) {
   const items = container.querySelectorAll(".summary-item");
   answers[slide.id] = Array.from(items).map(item => {
     const checked = item.querySelector("input:checked");
@@ -207,7 +206,8 @@ function saveNormal(slide) {
     return {
       text: item.querySelector(".summary-text").textContent,
       choice: checked ? checked.value : null,
-      question: textarea ? textarea.value.trim() : ""
+      question: textarea ? textarea.value.trim() : "",
+      slideNo: slideNo(idx)
     };
   });
 }
@@ -243,18 +243,50 @@ function render() {
   }
 
   else if (slide.type === "normal") {
+    // ★今回修正：stickyをやめて「上下固定2段 + 下だけスクロール」にする
     container.innerHTML = `
-      <img src="${slide.image}" class="slide-image">
-      <div class="summary">
-        ${slide.texts.map((t,i)=>`
-          <div class="summary-item">
-            <p class="summary-text">${t}</p>
-            <label><input type="radio" name="${slide.id}-${i}" value="ok"> 理解できた</label>
-            <label><input type="radio" name="${slide.id}-${i}" value="concern"> 気になる</label>
-            <label><input type="radio" name="${slide.id}-${i}" value="question"> 質問したい</label>
-            <textarea></textarea>
-          </div>`).join("")}
+      <div style="
+        height: calc(100vh - 140px);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      ">
+        <div style="position: relative; flex: 0 0 auto;">
+          <img src="${slide.image}" class="slide-image" style="display:block;">
+          <div style="
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(0,0,0,0.45);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+          ">${slideNo(page)}</div>
+        </div>
+
+        <div class="summary" style="
+          flex: 1 1 auto;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+        ">
+          ${slide.texts.map((t,i)=>`
+            <div class="summary-item">
+              <p class="summary-text">${t}</p>
+              <label><input type="radio" name="${slide.id}-${i}" value="ok"> 理解できた</label>
+              <label><input type="radio" name="${slide.id}-${i}" value="concern"> 気になる</label>
+              <label><input type="radio" name="${slide.id}-${i}" value="question"> 質問したい</label>
+              <textarea></textarea>
+            </div>`).join("")}
+        </div>
       </div>`;
+
+    nextBtn.disabled = true;
+    container.querySelectorAll("input[type=radio]").forEach(r =>
+      r.addEventListener("change", () => nextBtn.disabled = false)
+    );
   }
 
   else if (slide.type === "ask") {
@@ -265,31 +297,8 @@ function render() {
           `<label><input type="checkbox" value="${q}"> ${q}</label><br>`
         ).join("")}
       </div>`;
+    nextBtn.disabled = false;
   }
-
-  else {
-    renderSummary();
-    nextBtn.disabled = true;
-    return;
-  }
-
-  scrollTop();
-}
-
-/***********************
- * サマリー
- ***********************/
-function renderSummary() {
-  container.innerHTML = `
-    <div class="summary">
-      <h3>ご協力ありがとうございました</h3>
-      <p><strong>同意：</strong>${consentGiven ? "あり" : "なし"}</p>
-      ${Object.entries(answers).map(([id,list]) =>
-        `<h4>${id}</h4>` + list.map(a => `<p>・${a.text}</p>`).join("")
-      ).join("")}
-      <h4>医師に聞きたいこと</h4>
-      ${askAnswers.map(q => `<p>・${q}</p>`).join("")}
-    </div>`;
 }
 
 /***********************
@@ -297,8 +306,14 @@ function renderSummary() {
  ***********************/
 nextBtn.onclick = () => {
   const slide = slides[page];
-  if (slide.type === "normal") saveNormal(slide);
+
+  if (slide.type === "normal") {
+    if (!container.querySelector("input[type=radio]:checked")) return;
+    saveNormal(slide, page);
+  }
+
   if (slide.type === "ask") saveAsk();
+
   page++;
   if (page >= slides.length) {
     renderSummary();
@@ -313,6 +328,39 @@ backBtn.onclick = () => {
     render();
   }
 };
+
+/***********************
+ * サマリー
+ ***********************/
+function renderSummary() {
+  const understood = [];
+  const concerns = [];
+  const questions = [];
+
+  Object.values(answers).forEach(list => {
+    list.forEach(a => {
+      if (a.choice === "ok") understood.push(a.text);
+      if (a.choice === "concern") concerns.push(`${a.text} ${a.slideNo}`);
+      if (a.choice === "question") questions.push(`${a.text} ${a.slideNo}`);
+    });
+  });
+
+  askAnswers.forEach(q => questions.push(q));
+
+  container.innerHTML = `
+    <div class="summary">
+      <h3>サマリー</h3>
+
+      <h4>質問したいこと</h4>
+      ${questions.map(t => `<p>・${t}</p>`).join("") || "<p>なし</p>"}
+
+      <h4>気になること</h4>
+      ${concerns.map(t => `<p>・${t}</p>`).join("") || "<p>なし</p>"}
+
+      <h4>理解した</h4>
+      ${understood.map(t => `<p>・${t}</p>`).join("") || "<p>なし</p>"}
+    </div>`;
+}
 
 /***********************
  * 初期表示
