@@ -196,3 +196,68 @@ button:disabled {
   .nav { padding: 10px 12px; }
   button { font-size: 15px; padding: 10px 14px; }
 }
+/* =========================
+   印刷用（PDF出力）
+   ========================= */
+@media print {
+
+  /* A4サイズ指定 */
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  /* ナビ・ボタン類は非表示 */
+  .nav,
+  .print-controls {
+    display: none !important;
+  }
+
+  /* スクロール解除 */
+  #app,
+  #slide-container {
+    height: auto;
+    overflow: visible;
+  }
+
+  /* 印刷対象だけ表示 */
+  .print-area {
+    background: #fff;
+    color: #000;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  h3 {
+    font-size: 18pt;
+    margin-bottom: 8mm;
+  }
+
+  h4 {
+    font-size: 14pt;
+    margin-top: 8mm;
+    border-bottom: 1px solid #000;
+    padding-bottom: 2mm;
+  }
+
+  p {
+    font-size: 11pt;
+    line-height: 1.6;
+    margin: 2mm 0;
+  }
+
+  .print-meta {
+    font-size: 9pt;
+    margin-bottom: 6mm;
+  }
+
+  /* 改ページ制御（見出しの直後で切れないように） */
+  h4, p {
+    page-break-inside: avoid;
+  }
+}

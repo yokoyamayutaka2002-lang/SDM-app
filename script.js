@@ -185,8 +185,6 @@ const slideNo = (idx) => circledNumbers[idx] || "";
  ***********************/
 let page = 0;
 let consentGiven = false;
-
-// answers[slideId] = [{text, choice, question, slideNo}]
 const answers = {};
 const askAnswers = [];
 
@@ -198,71 +196,24 @@ const nextBtn = document.getElementById("nextBtn");
 const backBtn = document.getElementById("backBtn");
 
 /***********************
- * 保存（normal）
+ * 保存
  ***********************/
 function saveNormal(slide, idx) {
-  const items = container.querySelectorAll(".summary-item");
-  answers[slide.id] = Array.from(items).map(item => {
+  answers[slide.id] = Array.from(container.querySelectorAll(".summary-item")).map(item => {
     const checked = item.querySelector('input[type="radio"]:checked');
-    const textarea = item.querySelector("textarea");
     return {
       text: item.querySelector(".summary-text").textContent,
       choice: checked ? checked.value : null,
-      question: textarea ? textarea.value.trim() : "",
+      question: item.querySelector("textarea").value.trim(),
       slideNo: slideNo(idx)
     };
   });
 }
 
-/***********************
- * 保存（ask）
- ***********************/
 function saveAsk() {
   askAnswers.length = 0;
-  container
-    .querySelectorAll('input[type="checkbox"]:checked')
+  container.querySelectorAll('input[type="checkbox"]:checked')
     .forEach(cb => askAnswers.push(cb.value));
-}
-
-/***********************
- * 復元（normal）
- ***********************/
-function restoreNormal(slide) {
-  const saved = answers[slide.id];
-  if (!saved) return;
-
-  const items = container.querySelectorAll(".summary-item");
-  saved.forEach((a, i) => {
-    const item = items[i];
-    if (!item) return;
-
-    // ラジオ復元
-    if (a.choice) {
-      const r = item.querySelector(`input[type="radio"][value="${a.choice}"]`);
-      if (r) r.checked = true;
-    }
-
-    // テキスト復元
-    const ta = item.querySelector("textarea");
-    if (ta) {
-      ta.value = a.question || "";
-      // 「質問したい」以外は隠す
-      ta.style.display = (a.choice === "question") ? "block" : "none";
-    }
-  });
-
-  // 既に何か選ばれているなら次へ押せる
-  nextBtn.disabled = !container.querySelector('input[type="radio"]:checked');
-}
-
-/***********************
- * 復元（ask）
- ***********************/
-function restoreAsk() {
-  if (!askAnswers.length) return;
-  container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-    cb.checked = askAnswers.includes(cb.value);
-  });
 }
 
 /***********************
@@ -271,35 +222,21 @@ function restoreAsk() {
 function render() {
   container.innerHTML = "";
   const slide = slides[page];
-
-  if (!slide) {
-    container.innerHTML = `<div class="summary"><p>スライドが見つかりません（page=${page}）</p></div>`;
-    nextBtn.disabled = true;
-    return;
-  }
-
-  // 画面切替時は上に戻す（スクロール位置保持で迷子になるのを防ぐ）
   container.scrollTop = 0;
 
   if (slide.type === "consent") {
     container.innerHTML = `
-      <div class="slide-top">
-        <img src="${slide.image}" class="slide-image">
-        <div class="slide-badge">${slideNo(page)}</div>
-      </div>
-
+      <img src="${slide.image}" class="slide-image">
       <div class="summary">
         <h3>${slide.title}</h3>
         ${slide.texts.map(t => `<p>・${t}</p>`).join("")}
-        <label class="ask-item"><input type="checkbox" id="consent"> 同意します</label>
+        <label><input type="checkbox" id="consent"> 同意します</label>
       </div>
     `;
-
     const cb = document.getElementById("consent");
     cb.checked = consentGiven;
     nextBtn.disabled = !consentGiven;
-
-    cb.onchange = (e) => {
+    cb.onchange = e => {
       consentGiven = e.target.checked;
       nextBtn.disabled = !consentGiven;
     };
@@ -307,101 +244,48 @@ function render() {
 
   else if (slide.type === "normal") {
     container.innerHTML = `
-      <div class="slide-top">
-        <img src="${slide.image}" class="slide-image">
-        <div class="slide-badge">${slideNo(page)}</div>
-      </div>
-
+      <img src="${slide.image}" class="slide-image">
       <div class="summary">
         <h3>${slide.title}</h3>
-
-        ${slide.texts.map((t,i) => `
+        ${slide.texts.map((t,i)=>`
           <div class="summary-item">
             <p class="summary-text">${t}</p>
-
-            <div class="choices">
-              <label><input type="radio" name="${slide.id}-${i}" value="ok"> 理解できた</label>
-              <label><input type="radio" name="${slide.id}-${i}" value="concern"> 気になる</label>
-              <label><input type="radio" name="${slide.id}-${i}" value="question"> 質問したい</label>
-            </div>
-
-            <textarea class="question-box" placeholder="質問・メモ（任意）"></textarea>
+            <label><input type="radio" name="${slide.id}-${i}" value="ok"> 理解できた</label>
+            <label><input type="radio" name="${slide.id}-${i}" value="concern"> 気になる</label>
+            <label><input type="radio" name="${slide.id}-${i}" value="question"> 質問したい</label>
+            <textarea></textarea>
           </div>
         `).join("")}
       </div>
     `;
-
-    // 初期は次へ不可（何か選んだらOK）
     nextBtn.disabled = true;
-
-    // 「質問したい」のときだけテキスト欄を表示
-    container.querySelectorAll(".summary-item").forEach(item => {
-      const textarea = item.querySelector(".question-box");
-      textarea.style.display = "none";
-
-      item.querySelectorAll('input[type="radio"]').forEach(r => {
-        r.addEventListener("change", () => {
-          textarea.style.display = (r.value === "question" && r.checked) ? "block" : "none";
-          nextBtn.disabled = false;
-        });
-      });
-    });
-
-    // 戻ってきた時に選択・入力を復元
-    restoreNormal(slide);
+    container.querySelectorAll('input[type="radio"]').forEach(r =>
+      r.addEventListener("change", () => nextBtn.disabled = false)
+    );
   }
 
   else if (slide.type === "ask") {
     container.innerHTML = `
       <div class="summary">
         <h3>${slide.title}</h3>
-        ${slide.questions.map(q => `
-          <label class="ask-item"><input type="checkbox" value="${q}"> ${q}</label>
-        `).join("")}
+        ${slide.questions.map(q =>
+          `<label><input type="checkbox" value="${q}"> ${q}</label><br>`
+        ).join("")}
       </div>
     `;
     nextBtn.disabled = false;
-
-    // 戻ってきた時に復元
-    restoreAsk();
   }
-
-  else {
-    container.innerHTML = `<div class="summary"><p>未対応のスライドタイプ: ${slide.type}</p></div>`;
-    nextBtn.disabled = false;
-  }
-
-  // 戻るボタン：最初のページでは無効でもいいならここで制御
-  backBtn.disabled = (page === 0);
 }
 
 /***********************
- * ナビゲーション
+ * ナビ
  ***********************/
 nextBtn.onclick = () => {
   const slide = slides[page];
-  if (!slide) return;
-
-  if (slide.type === "consent") {
-    if (!consentGiven) return;
-  }
-
-  if (slide.type === "normal") {
-    // 何も選ばれてなければ進めない
-    if (!container.querySelector('input[type="radio"]:checked')) return;
-    saveNormal(slide, page);
-  }
-
-  if (slide.type === "ask") {
-    saveAsk();
-  }
-
+  if (slide.type === "normal") saveNormal(slide, page);
+  if (slide.type === "ask") saveAsk();
   page++;
-  if (page >= slides.length) {
-    renderSummary();
-  } else {
-    render();
-  }
+  page < slides.length ? render() : renderSummary();
 };
 
 backBtn.onclick = () => {
@@ -412,7 +296,7 @@ backBtn.onclick = () => {
 };
 
 /***********************
- * サマリー
+ * サマリー + PDF
  ***********************/
 function renderSummary() {
   const understood = [];
@@ -423,15 +307,17 @@ function renderSummary() {
     list.forEach(a => {
       if (a.choice === "ok") understood.push(a.text);
       if (a.choice === "concern") concerns.push(`${a.text} ${a.slideNo}`);
-      if (a.choice === "question") questions.push(`${a.text} ${a.slideNo}${a.question ? "（" + a.question + "）" : ""}`);
+      if (a.choice === "question") {
+        questions.push(`${a.text} ${a.slideNo}${a.question ? "（" + a.question + "）" : ""}`);
+      }
     });
   });
-
   askAnswers.forEach(q => questions.push(q));
 
   container.innerHTML = `
-    <div class="summary">
-      <h3>サマリー</h3>
+    <div class="summary print-area">
+      <h3>重症喘息 ディシジョンエイド｜サマリー</h3>
+      <p>作成日：${new Date().toLocaleDateString("ja-JP")}</p>
 
       <h4>質問したいこと</h4>
       ${questions.map(t => `<p>・${t}</p>`).join("") || "<p>なし</p>"}
@@ -442,8 +328,13 @@ function renderSummary() {
       <h4>理解した</h4>
       ${understood.map(t => `<p>・${t}</p>`).join("") || "<p>なし</p>"}
     </div>
+
+    <div class="print-controls">
+      <button id="pdfBtn">📄 A4でPDF出力</button>
+    </div>
   `;
 
+  document.getElementById("pdfBtn").onclick = () => window.print();
   nextBtn.disabled = true;
   backBtn.disabled = false;
 }
