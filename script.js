@@ -192,14 +192,13 @@ const backBtn = document.getElementById("backBtn");
 /***********************
  * 保存
  ***********************/
-function saveNormal(slide, idx) {
+function saveNormal(slide) {
   answers[slide.id] = Array.from(container.querySelectorAll(".summary-item")).map(item => {
     const checked = item.querySelector('input[type="radio"]:checked');
     return {
       text: item.querySelector(".summary-text").textContent,
       choice: checked ? checked.value : null,
-      question: item.querySelector("textarea").value.trim(),
-      slideNo: idx + 1
+      question: item.querySelector("textarea").value.trim()
     };
   });
 }
@@ -225,8 +224,7 @@ function render() {
         <h3>${slide.title}</h3>
         ${slide.texts.map(t => `<p>・${t}</p>`).join("")}
         <label><input type="checkbox" id="consent"> 同意します</label>
-      </div>
-    `;
+      </div>`;
     const cb = document.getElementById("consent");
     cb.checked = consentGiven;
     nextBtn.disabled = !consentGiven;
@@ -247,11 +245,10 @@ function render() {
             <label><input type="radio" name="${slide.id}-${i}" value="ok"> 理解できた</label>
             <label><input type="radio" name="${slide.id}-${i}" value="concern"> 気になる</label>
             <label><input type="radio" name="${slide.id}-${i}" value="question"> 質問したい</label>
-            <textarea></textarea>
+            <textarea placeholder="質問・メモ（任意）"></textarea>
           </div>
         `).join("")}
-      </div>
-    `;
+      </div>`;
     nextBtn.disabled = true;
     container.querySelectorAll('input[type="radio"]').forEach(r =>
       r.addEventListener("change", () => nextBtn.disabled = false)
@@ -262,11 +259,17 @@ function render() {
     container.innerHTML = `
       <div class="summary">
         <h3>${slide.title}</h3>
-        ${slide.questions.map(q =>
-          `<label><input type="checkbox" value="${q}"> ${q}</label><br>`
-        ).join("")}
-      </div>
-    `;
+        <ul class="ask-list">
+          ${slide.questions.map(q => `
+            <li>
+              <label class="ask-item">
+                <input type="checkbox" value="${q}">
+                <span>${q}</span>
+              </label>
+            </li>
+          `).join("")}
+        </ul>
+      </div>`;
     nextBtn.disabled = false;
   }
 }
@@ -276,21 +279,18 @@ function render() {
  ***********************/
 nextBtn.onclick = () => {
   const slide = slides[page];
-  if (slide.type === "normal") saveNormal(slide, page);
+  if (slide.type === "normal") saveNormal(slide);
   if (slide.type === "ask") saveAsk();
   page++;
   page < slides.length ? render() : renderSummary();
 };
 
 backBtn.onclick = () => {
-  if (page > 0) {
-    page--;
-    render();
-  }
+  if (page > 0) { page--; render(); }
 };
 
 /***********************
- * サマリー + 医療者記録 + PDF
+ * サマリー + 患者情報 + 医療者記録 + PDF
  ***********************/
 function renderSummary() {
   const understood = [];
@@ -306,6 +306,8 @@ function renderSummary() {
       }
     });
   });
+
+  // askスライドの質問は原文のまま全件追加
   askAnswers.forEach(q => questions.push(q));
 
   const today = new Date().toLocaleDateString("ja-JP");
@@ -313,38 +315,46 @@ function renderSummary() {
   container.innerHTML = `
     <div class="summary print-area">
       <h3>重症喘息 ディシジョンエイド｜サマリー</h3>
+
+      <h4>患者基本情報</h4>
+      <p>氏名：<input></p>
+      <p>生年月日：<input type="date"></p>
+      <p>住所：<input></p>
+
+      <h4>医療機関情報</h4>
+      <p>医療機関名：<input></p>
+      <p>担当医師名：<input></p>
       <p>作成日：${today}</p>
+
+      <hr>
 
       <h4>患者さんの意思・理解</h4>
 
       <h5>質問したいこと</h5>
-      ${questions.map(t => `<p>・${t}</p>`).join("") || "<p>なし</p>"}
+      ${questions.length ? questions.map(t => `<p>・${t}</p>`).join("") : "<p>なし</p>"}
 
       <h5>気になること</h5>
-      ${concerns.map(t => `<p>・${t}</p>`).join("") || "<p>なし</p>"}
+      ${concerns.length ? concerns.map(t => `<p>・${t}</p>`).join("") : "<p>なし</p>"}
 
-      <h5>理解した</h5>
-      ${understood.map(t => `<p>・${t}</p>`).join("") || "<p>なし</p>"}
+      <h5>以下のことは全て理解しました</h5>
+      ${understood.length ? understood.map(t => `<p>・${t}</p>`).join("") : "<p>なし</p>"}
 
       <hr>
 
       <h4>医療者による最終判断（共同意思決定の記録）</h4>
+      <label><input type="radio" name="finalDecision" value="導入"> 導入</label>
+      <label><input type="radio" name="finalDecision" value="保留"> 保留</label>
+      <label><input type="radio" name="finalDecision" value="見送り"> 見送り</label>
 
-      <div class="medical-decision">
-        <label><input type="radio" name="finalDecision" value="導入"> 導入</label>
-        <label><input type="radio" name="finalDecision" value="保留"> 保留</label>
-        <label><input type="radio" name="finalDecision" value="見送り"> 見送り</label>
+      <p>
+        判断日：
+        <input type="date" value="${new Date().toISOString().slice(0,10)}">
+      </p>
 
-        <p>
-          判断日：
-          <input type="date" value="${new Date().toISOString().slice(0,10)}">
-        </p>
-
-        <p>
-          判断理由・補足（医療者記録）<br>
-          <textarea placeholder="例：患者と相談の上、今回は保留。次回再評価。"></textarea>
-        </p>
-      </div>
+      <p>
+        判断理由・補足（医療者記録）<br>
+        <textarea placeholder="例：患者と相談の上、今回は保留。次回再評価。"></textarea>
+      </p>
     </div>
 
     <div class="print-controls">
