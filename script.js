@@ -171,6 +171,13 @@ const slides = [
       "製剤の違いを教えてください。",
       "一度休んで再開することはできますか？"
     ]
+  },
+
+  /* ★追加：生物学的製剤 意向アンケート */
+  {
+    id: "bioSurvey",
+    title: "生物学的製剤についてのお考え",
+    type: "bioSurvey"
   }
 ];
 
@@ -181,6 +188,13 @@ let page = 0;
 let consentGiven = false;
 const answers = {};
 const askAnswers = [];
+
+/* ★追加：アンケート状態 */
+const bioSurvey = {
+  choice: "",
+  reasons: [],
+  other: ""
+};
 
 /***********************
  * DOM
@@ -207,6 +221,19 @@ function saveAsk() {
   askAnswers.length = 0;
   container.querySelectorAll('input[type="checkbox"]:checked')
     .forEach(cb => askAnswers.push(cb.value));
+}
+
+/* ★追加：アンケート保存 */
+function saveBioSurvey() {
+  bioSurvey.choice =
+    container.querySelector('input[name="bioChoice"]:checked')?.value || "";
+
+  bioSurvey.reasons = Array.from(
+    container.querySelectorAll('input[name="bioReason"]:checked')
+  ).map(cb => cb.value);
+
+  bioSurvey.other =
+    container.querySelector("#bioOther")?.value.trim() || "";
 }
 
 /***********************
@@ -272,6 +299,74 @@ function render() {
       </div>`;
     nextBtn.disabled = false;
   }
+
+  /* ★追加：アンケート描画 */
+  else if (slide.type === "bioSurvey") {
+  container.innerHTML = `
+    <div class="summary">
+      <h3>${slide.title}</h3>
+
+      <h4>生物学的製剤についてのお考え</h4>
+      <label><input type="radio" name="bioChoice" value="やりたい"> やりたい</label><br>
+      <label><input type="radio" name="bioChoice" value="迷っている"> 迷っている</label><br>
+      <label><input type="radio" name="bioChoice" value="やりたくない"> やりたくない</label>
+
+      <div id="bioReasons" style="display:none; margin-top:20px;"></div>
+
+      <p style="margin-top:15px;">その他：</p>
+      <textarea id="bioOther"></textarea>
+    </div>
+  `;
+
+  const reasonsBox = document.getElementById("bioReasons");
+
+  const reasonSets = {
+    "やりたい": [
+    "現在の喘息症状が改善されること",
+    "喘息増悪が長期にわたって抑制されること",
+    "喘息悪化による日常生活への影響が少なくなること",
+    "喘息による予定外・緊急受診が少なくなること",
+    "飲んでいる薬が減らせること",
+    "仕事・家事をスムーズに行うことが出来ること",
+    "ステロイド薬による副作用を回避すること"
+    ],
+    "迷っている": [
+    "現在の治療の満足しているから",
+    "喘息の状態がそれほど悪いと考えていないから",
+    "生物学的製剤のメリットが分からない",
+    "喘息による将来の不安はないから",
+    "治療費用が高いから",
+    "説明に納得できないから",
+    "自分では重症喘息だと思っていないから"
+  ],
+    "やりたくない": [
+    "現在の治療の満足しているから",
+    "喘息の状態がそれほど悪いと考えていないから",
+    "生物学的製剤のメリットが分からない",
+    "喘息による将来の不安はないから",
+    "治療費用が高いから",
+    "説明に納得できないから",
+    "自分では重症喘息だと思っていないから"
+    ]
+  };
+
+  container.querySelectorAll('input[name="bioChoice"]').forEach(radio => {
+    radio.addEventListener("change", () => {
+      const selected = radio.value;
+      reasonsBox.style.display = "block";
+      reasonsBox.innerHTML = `
+        <h4>理由（複数選択可）</h4>
+        ${reasonSets[selected].map(r => `
+          <label class="ask-item">
+            <input type="checkbox" name="bioReason" value="${r}"> ${r}
+          </label>
+        `).join("")}
+      `;
+    });
+  });
+
+  nextBtn.disabled = false;
+}
 }
 
 /***********************
@@ -281,6 +376,7 @@ nextBtn.onclick = () => {
   const slide = slides[page];
   if (slide.type === "normal") saveNormal(slide);
   if (slide.type === "ask") saveAsk();
+  if (slide.type === "bioSurvey") saveBioSurvey();
   page++;
   page < slides.length ? render() : renderSummary();
 };
@@ -290,7 +386,7 @@ backBtn.onclick = () => {
 };
 
 /***********************
- * サマリー + 患者情報 + 医療者記録 + PDF
+ * サマリー + PDF
  ***********************/
 function renderSummary() {
   const understood = [];
@@ -306,8 +402,6 @@ function renderSummary() {
       }
     });
   });
-
-  // askスライドの質問は原文のまま全件追加
   askAnswers.forEach(q => questions.push(q));
 
   const today = new Date().toLocaleDateString("ja-JP");
@@ -316,19 +410,12 @@ function renderSummary() {
     <div class="summary print-area">
       <h3>重症喘息 ディシジョンエイド｜サマリー</h3>
 
-      <h4>患者基本情報</h4>
-      <p>氏名：<input></p>
-      <p>生年月日：<input type="date"></p>
-      <p>住所：<input></p>
-
-      <h4>医療機関情報</h4>
-      <p>医療機関名：<input></p>
-      <p>担当医師名：<input></p>
-      <p>作成日：${today}</p>
+      <h4>生物学的製剤の意向</h4>
+      <p>意向：${bioSurvey.choice || "未回答"}</p>
+      <p>理由：${bioSurvey.reasons.length ? bioSurvey.reasons.join("、") : "なし"}</p>
+      ${bioSurvey.other ? `<p>その他：${bioSurvey.other}</p>` : ""}
 
       <hr>
-
-      <h4>患者さんの意思・理解</h4>
 
       <h5>質問したいこと</h5>
       ${questions.length ? questions.map(t => `<p>・${t}</p>`).join("") : "<p>なし</p>"}
@@ -336,31 +423,13 @@ function renderSummary() {
       <h5>気になること</h5>
       ${concerns.length ? concerns.map(t => `<p>・${t}</p>`).join("") : "<p>なし</p>"}
 
-      <h5>以下のことは全て理解しました</h5>
+      <h5>理解した</h5>
       ${understood.length ? understood.map(t => `<p>・${t}</p>`).join("") : "<p>なし</p>"}
-
-      <hr>
-
-      <h4>医療者による最終判断（共同意思決定の記録）</h4>
-      <label><input type="radio" name="finalDecision" value="導入"> 導入</label>
-      <label><input type="radio" name="finalDecision" value="保留"> 保留</label>
-      <label><input type="radio" name="finalDecision" value="見送り"> 見送り</label>
-
-      <p>
-        判断日：
-        <input type="date" value="${new Date().toISOString().slice(0,10)}">
-      </p>
-
-      <p>
-        判断理由・補足（医療者記録）<br>
-        <textarea placeholder="例：患者と相談の上、今回は保留。次回再評価。"></textarea>
-      </p>
     </div>
 
     <div class="print-controls">
       <button id="pdfBtn">📄 A4でPDF出力</button>
-    </div>
-  `;
+    </div>`;
 
   document.getElementById("pdfBtn").onclick = () => window.print();
   nextBtn.disabled = true;
