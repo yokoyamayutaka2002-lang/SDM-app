@@ -261,3 +261,106 @@ button:disabled {
     page-break-inside: avoid;
   }
 }
+/* =========================
+   医療者記録欄
+   ========================= */
+
+.medical-decision {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+}
+
+.decision-options {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.decision-options label {
+  cursor: pointer;
+}
+
+.decision-row {
+  margin-top: 10px;
+}
+
+.decision-row input[type="date"] {
+  margin-left: 8px;
+}
+
+.decision-row textarea {
+  width: 100%;
+  min-height: 80px;
+  margin-top: 6px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+}
+
+/* =========================
+   印刷（PDF）用
+   ========================= */
+@media print {
+
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .nav,
+  .print-controls {
+    display: none !important;
+  }
+
+  #app,
+  #slide-container {
+    height: auto;
+    overflow: visible;
+  }
+
+  .print-area {
+    background: #fff;
+    color: #000;
+  }
+
+  h3 {
+    font-size: 18pt;
+    margin-bottom: 6mm;
+  }
+
+  h4 {
+    font-size: 14pt;
+    margin-top: 8mm;
+    border-bottom: 1px solid #000;
+  }
+
+  h5 {
+    font-size: 12pt;
+    margin-top: 6mm;
+  }
+
+  p {
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+
+  textarea,
+  input {
+    border: 1px solid #000;
+    color: #000;
+  }
+
+  .medical-decision {
+    border: 1px solid #000;
+    page-break-inside: avoid;
+  }
+}

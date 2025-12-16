@@ -175,12 +175,6 @@ const slides = [
 ];
 
 /***********************
- * ユーティリティ
- ***********************/
-const circledNumbers = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭"];
-const slideNo = (idx) => circledNumbers[idx] || "";
-
-/***********************
  * 状態管理
  ***********************/
 let page = 0;
@@ -205,7 +199,7 @@ function saveNormal(slide, idx) {
       text: item.querySelector(".summary-text").textContent,
       choice: checked ? checked.value : null,
       question: item.querySelector("textarea").value.trim(),
-      slideNo: slideNo(idx)
+      slideNo: idx + 1
     };
   });
 }
@@ -296,7 +290,7 @@ backBtn.onclick = () => {
 };
 
 /***********************
- * サマリー + PDF
+ * サマリー + 医療者記録 + PDF
  ***********************/
 function renderSummary() {
   const understood = [];
@@ -306,27 +300,51 @@ function renderSummary() {
   Object.values(answers).forEach(list => {
     list.forEach(a => {
       if (a.choice === "ok") understood.push(a.text);
-      if (a.choice === "concern") concerns.push(`${a.text} ${a.slideNo}`);
+      if (a.choice === "concern") concerns.push(a.text);
       if (a.choice === "question") {
-        questions.push(`${a.text} ${a.slideNo}${a.question ? "（" + a.question + "）" : ""}`);
+        questions.push(`${a.text}${a.question ? "（" + a.question + "）" : ""}`);
       }
     });
   });
   askAnswers.forEach(q => questions.push(q));
 
+  const today = new Date().toLocaleDateString("ja-JP");
+
   container.innerHTML = `
     <div class="summary print-area">
       <h3>重症喘息 ディシジョンエイド｜サマリー</h3>
-      <p>作成日：${new Date().toLocaleDateString("ja-JP")}</p>
+      <p>作成日：${today}</p>
 
-      <h4>質問したいこと</h4>
+      <h4>患者さんの意思・理解</h4>
+
+      <h5>質問したいこと</h5>
       ${questions.map(t => `<p>・${t}</p>`).join("") || "<p>なし</p>"}
 
-      <h4>気になること</h4>
+      <h5>気になること</h5>
       ${concerns.map(t => `<p>・${t}</p>`).join("") || "<p>なし</p>"}
 
-      <h4>理解した</h4>
+      <h5>理解した</h5>
       ${understood.map(t => `<p>・${t}</p>`).join("") || "<p>なし</p>"}
+
+      <hr>
+
+      <h4>医療者による最終判断（共同意思決定の記録）</h4>
+
+      <div class="medical-decision">
+        <label><input type="radio" name="finalDecision" value="導入"> 導入</label>
+        <label><input type="radio" name="finalDecision" value="保留"> 保留</label>
+        <label><input type="radio" name="finalDecision" value="見送り"> 見送り</label>
+
+        <p>
+          判断日：
+          <input type="date" value="${new Date().toISOString().slice(0,10)}">
+        </p>
+
+        <p>
+          判断理由・補足（医療者記録）<br>
+          <textarea placeholder="例：患者と相談の上、今回は保留。次回再評価。"></textarea>
+        </p>
+      </div>
     </div>
 
     <div class="print-controls">
